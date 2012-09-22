@@ -115,7 +115,13 @@ RedisClient.prototype.flush_and_error = function (message) {
     while (this.offline_queue.length > 0) {
         command_obj = this.offline_queue.shift();
         if (typeof command_obj.callback === "function") {
-            command_obj.callback(message);
+            try {
+                // if there are any exceptions at this stage
+                // they cannot interupt the reconnect process
+                command_obj.callback(message);
+            } catch (e) {
+                this.emit("error", e);
+            }
         }
     }
     this.offline_queue = new Queue();
